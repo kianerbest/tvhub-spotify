@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>tvHub – Spotify login</title>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; background: #1F2235; color: #FFFBEF;
+           display: flex; min-height: 90vh; align-items: center; justify-content: center;
+           text-align: center; padding: 24px; }
+    h1 { font-family: "New York", ui-serif, Georgia, serif; font-weight: 600; font-size: 2em;
+         margin: 0 0 .4em; color: #E3A419; }
+    p { color: rgba(255, 251, 239, .65); font-size: 1.1em; line-height: 1.45; max-width: 30em; }
+  </style>
+</head>
+<body>
+  <div>
+    <h1 id="title">Sending you back to your Apple TV…</h1>
+    <p id="message">Keep this tab open for a second.</p>
+  </div>
+  <script>
+    // Spotify only allows https redirect URLs, but the Apple TV can only be
+    // reached over plain http on your home network. This page bridges the two:
+    // it forwards Spotify's one-time code to the address in `state`
+    // ("<random>@<apple-tv-ip>:<port>"), which the tvHub app put there.
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var state = params.get('state') || '';
+      var at = state.lastIndexOf('@');
+      var host = at >= 0 ? state.slice(at + 1) : '';
+
+      // Only ever forward to a private home-network address.
+      var privateHost = /^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|127\.0\.0\.1|[A-Za-z0-9-]+\.local):\d{2,5}$/;
+
+      if (!privateHost.test(host)) {
+        document.getElementById('title').textContent = 'Nothing to do here';
+        document.getElementById('message').textContent =
+          'This page finishes the Spotify login for the tvHub app on your Apple TV. Start the login from the TV.';
+        return;
+      }
+      window.location.replace('http://' + host + '/callback' + window.location.search);
+    })();
+  </script>
+</body>
+</html>
